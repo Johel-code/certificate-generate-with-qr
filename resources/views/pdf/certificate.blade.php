@@ -1,26 +1,43 @@
-<html>
-    <head>
-        <meta charset="utf-8">
-    </head>
-
-    <body style="position: relative; width: 100%; height: 100%;">
-
-        <div style="
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificado</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .certificate-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+        }
+        .certificate-image {
             position: absolute;
-            top: {{ $positionY }}px;
-            left: {{ $positionX }}px;
-            font-size: {{ $fontSize }}px;
-            color: {{ $fontColor }};
-        ">
-            {{ $name }}
-        </div>
-        @if ($logo)
-            <img src="{{ $logo }}" style="
-                position: absolute;
-                top: 20px; /* Ajusta según sea necesario */
-                left: 20px; /* Ajusta según sea necesario */
-                width: 100px; /* Tamaño del logo */
-            ">
-        @endif
-    </body>
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .certificate-text {
+            position: absolute;
+            left: {{ $textX }}px;
+            top: {{ $textY }}px;
+            font-size: {{ $textSize }}px;
+            color: {{ $textColor }};
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="certificate-container">
+        <img src="{{ public_path('storage/' . $image) }}" alt="Certificado" class="certificate-image">
+        <div class="certificate-text">{{ $text }}</div>
+    </div>
+</body>
 </html>

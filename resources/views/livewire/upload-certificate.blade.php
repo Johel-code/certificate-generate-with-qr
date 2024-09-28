@@ -2,7 +2,7 @@
     <!-- Controles a la izquierda -->
     <div class="w-1/3 p-4 bg-gray-100" x-data="dragText()">
 
-        <form wire:submit='save'>
+        <form wire:submit='generateCertificate'>
 
             <label class="block text-sm font-medium text-gray-700">Subir la imagen del certificado</label>
             <input type="file" wire:model="image" class="block w-full mt-2 mb-4 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100">
