@@ -1,6 +1,6 @@
 <div class="flex">
     <!-- Controles a la izquierda -->
-    <div class="w-1/3 p-4 bg-gray-100" x-data="dragText()">
+    <div class="w-1/3 p-4 bg-gray-100" x-data="dragText()" x-init="fontFamily = 'Arial'">
 
         <form wire:submit='generateCertificate'>
 
@@ -18,6 +18,16 @@
             <!-- Cambiar el color del texto -->
             <label class="block mt-4 text-sm font-medium text-gray-700">Color del texto</label>
             <input type="color" wire:model="textColor" class="block w-full h-10 p-0 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+
+            <!-- Cambiar la fuente del texto -->
+            <label class="block mt-4 text-sm font-medium text-gray-700">Fuente del texto</label>
+            <select wire:model="fontFamily" class="block w-full mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <option value="Arial">Arial</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Courier New">Courier New</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Verdana">Verdana</option>
+            </select>
 
             <!-- Cambiar la posición del texto mediante inputs -->
             <div class="mt-4">
@@ -46,7 +56,7 @@
 
                 <!-- Campo de texto editable y arrastrable -->
                 <div
-                    x-bind:style="'left: ' + textX + 'px; top: ' + textY + 'px; position: absolute; color: ' + textColor + '; font-size: ' + textSize + 'px;'"
+                    x-bind:style="'left: ' + textX + 'px; top: ' + textY + 'px; position: absolute; color: ' + textColor + '; font-size: ' + textSize + 'px; font-family: ' + fontFamily + ';'"
                     x-text="$wire.text"
                     @mousedown="startDrag"
                     @mousemove="drag($event)"
@@ -69,6 +79,7 @@
             textY: @entangle('textY'),
             textSize: @entangle('textSize'),
             textColor: @entangle('textColor'),
+            fontFamily: @entangle('fontFamily'),
             startX: 0,
             startY: 0,
 

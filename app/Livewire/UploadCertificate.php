@@ -15,9 +15,11 @@ class UploadCertificate extends Component
     public $image; // Para almacenar la imagen subida
     public $text = "Texto de ejemplo"; // Texto inicial
     public $textColor = "#000000"; // Color del texto
+    public $fontFamily = 'Arial';
     public $textSize = 20; // Tamaño del texto
     public $textX = 50; // Posición X del texto
     public $textY = 50; // Posición Y del texto
+    public $csv;
 
     public function generateCertificate(){
         // Validar que se haya subido una imagen
@@ -36,6 +38,7 @@ class UploadCertificate extends Component
             'textY' => $this->textY,
             'textSize' => $this->textSize,
             'textColor' => $this->textColor,
+            'fontFamily' => $this->fontFamily
         ];
 
         // $image = getimagesize(storage_path('app/public/'.$imagePath));
@@ -58,11 +61,4 @@ class UploadCertificate extends Component
         return view('livewire.upload-certificate');
     }
 
-    public function updatedImage()
-    {
-        // Validación de la imagen
-        $this->validate([
-            'image' => 'image|max:1024', // 1MB máximo
-        ]);
-    }
 }

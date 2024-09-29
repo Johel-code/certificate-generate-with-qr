@@ -31,6 +31,7 @@
             font-size: {{ $textSize }}px;
             color: {{ $textColor }};
             font-weight: bold;
+            font-family: '{{ $fontFamily }}', sans-serif;
         }
     </style>
 </head>
