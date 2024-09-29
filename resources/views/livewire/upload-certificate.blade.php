@@ -7,6 +7,9 @@
             <label class="block text-sm font-medium text-gray-700">Subir la imagen del certificado</label>
             <input type="file" wire:model="image" class="block w-full mt-2 mb-4 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100">
 
+            <label class="block text-sm font-medium text-gray-700">Subir archivo CSV con nombres de usuarios</label>
+            <input type="file" wire:model="csv" class="block w-full mt-2 mb-4 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100">
+
             <!-- Cambiar el texto -->
             <label class="block text-sm font-medium text-gray-700">Texto del certificado</label>
             <input type="text" wire:model="text" placeholder="Texto aquí" class="block w-full mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
@@ -23,10 +26,8 @@
             <label class="block mt-4 text-sm font-medium text-gray-700">Fuente del texto</label>
             <select wire:model="fontFamily" class="block w-full mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                 <option value="Arial">Arial</option>
-                <option value="Times New Roman">Times New Roman</option>
-                <option value="Courier New">Courier New</option>
-                <option value="Georgia">Georgia</option>
-                <option value="Verdana">Verdana</option>
+                <option value="Times-Roman">Times-Roman</option>
+                <option value="Courier">Courier</option>
             </select>
 
             <!-- Cambiar la posición del texto mediante inputs -->
