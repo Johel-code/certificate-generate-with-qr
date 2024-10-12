@@ -33,8 +33,8 @@
 </head>
 <body>
     <div class="certificate-container">
-        <img src="{{ public_path('storage/' . $data['data']['image']) }}" alt="Certificado" class="certificate-image">
-        @foreach($data['data']['fieldsConfigurations'] as $value)
+        <img src="{{ public_path('storage/' . $data['image']) }}" alt="Certificado" class="certificate-image">
+        @foreach($data['fieldsConfigurations'] as $value)
             <div style="
                 position: absolute;
                 left: {{ $value['textX'] }}px;
@@ -46,7 +46,7 @@
             </div>
         @endforeach
         <div class="qr-code">
-            <img src="data:image/png;base64, {{ $data['data']['qrCode'] }}" alt="QR Code">
+            <img src="data:image/png;base64, {{ $data['qrCode'] }}" alt="QR Code">
         </div>
     </div>
 </body>

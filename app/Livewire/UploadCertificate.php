@@ -69,26 +69,20 @@ class UploadCertificate extends Component
         }
     }
 
-    public function generateCertificate(){
-
+    public function generateCertificate()
+    {
         $this->validate([
             'image' => 'required|image|max:1024',
         ]);
 
         $imagePath = $this->image->store('certificates', 'public');
+        $zipFileName = 'certificates/certificates_' . time() . '.zip';
+        $zip = new \ZipArchive();
+        $zip->open(storage_path('app/public/' . $zipFileName), \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
 
         foreach ($this->csvData as $row) {
-
-            $data = [
-                'image' => $imagePath,
-                'qrCode' => base64_encode(QrCode::format('png')->size(300)->generate(route('certificate.view', ['user' => $row[0]]))),
-            ];
-
             $updatedConfigurations = [];
-
             foreach ($this->csvHeaders as $key => $header) {
-                // $cleanUserName = trim($row[$key], "\xEF\xBB\xBF");
-                // $text = preg_replace('/[^A-Za-z0-9\-]/', '', $cleanUserName);
                 $updatedConfigurations[$header] = [
                     'text' => $row[$key],
                     'textSize' => $this->fieldsConfigurations[$header]['textSize'],
@@ -99,17 +93,35 @@ class UploadCertificate extends Component
                 ];
             }
 
-            $data['fieldsConfigurations'] = $updatedConfigurations;
+            // Preparar los datos para el certificado
+            $data = [
+                'image' => $imagePath,
+                'qrCode' => base64_encode(QrCode::format('png')->size(300)->generate(route('certificate.view', ['user' => $row[0]]))),
+                'fieldsConfigurations' => $updatedConfigurations,
+            ];
 
-            return redirect()->route('certificate.preview', ['data' => $data]);
+            // Generar el PDF
+            $pdf = Pdf::loadView('pdf.certificate', compact('data'))
+                    ->setPaper('A4', 'landscape')
+                    ->setOption('margin', '0');
 
-            // // Guardar el PDF
-            // $fileName = 'certificates/' . preg_replace('/[^A-Za-z0-9\-]/', '', $cleanUserName) . '.pdf';
-            // Storage::disk('public')->put($fileName, $pdf->output());
+            // Guardar cada PDF individual en un archivo
+            $fileName = 'certificates/' . preg_replace('/[^A-Za-z0-9\-]/', '', $row[0]) . '.pdf';
+            Storage::disk('public')->put($fileName, $pdf->output());
+
+            // Agregar el PDF al archivo ZIP
+            $zip->addFile(storage_path('app/public/' . $fileName), basename($fileName));
         }
+
+        // Cerrar el archivo ZIP
+        $zip->close();
+
+        // Descargar el archivo ZIP
+        return response()->download(storage_path('app/public/' . $zipFileName))->deleteFileAfterSend(true);
 
         session()->flash('message', 'Certificados generados con éxito.');
     }
+
 
     public function render()
     {
