@@ -24,21 +24,30 @@
             height: 100%;
             object-fit: cover;
         }
-        .certificate-text {
+        .qr-code {
             position: absolute;
-            left: {{ $textX }}px;
-            top: {{ $textY }}px;
-            font-size: {{ $textSize }}px;
-            color: {{ $textColor }};
-            font-weight: bold;
-            font-family: '{{ $fontFamily }}', sans-serif;
+            bottom: 20px;
+            right: 20px;
         }
     </style>
 </head>
 <body>
     <div class="certificate-container">
-        <img src="{{ public_path('storage/' . $image) }}" alt="Certificado" class="certificate-image">
-        <div class="certificate-text">{{ $text }}</div>
+        <img src="{{ public_path('storage/' . $data['data']['image']) }}" alt="Certificado" class="certificate-image">
+        @foreach($data['data']['fieldsConfigurations'] as $value)
+            <div style="
+                position: absolute;
+                left: {{ $value['textX'] }}px;
+                top: {{ $value['textY'] }}px;
+                font-size: {{ $value['textSize'] }}px;
+                color: {{ $value['textColor'] }};
+                font-family: '{{ $value['fontFamily'] }}', sans-serif;">
+                {{ $value['text'] }}
+            </div>
+        @endforeach
+        <div class="qr-code">
+            <img src="data:image/png;base64, {{ $data['data']['qrCode'] }}" alt="QR Code">
+        </div>
     </div>
 </body>
 </html>

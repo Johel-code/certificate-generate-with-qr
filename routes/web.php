@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CertificateController;
 use App\Livewire\UploadCertificate;
 use Illuminate\Support\Facades\Route;
 
@@ -28,4 +29,8 @@ Route::middleware([
     })->name('dashboard');
 });
 
-Route::get('/certificate-editor', UploadCertificate::class)->name('certificate.editor');
+Route::get('/certificate{user}', [CertificateController::class, 'view'])->name('certificate.view');
+
+Route::get('/certificate/preview', [CertificateController::class, 'preview'])->name('certificate.preview');
+
+

@@ -15,11 +15,11 @@ class UploadCertificate extends Component
 
     use WithFileUploads;
 
-    public $image; // Para almacenar la imagen subida
-    public $csvData = []; // Almacenar el contenido del CSV
-    public $csvHeaders = []; // Almacenar los encabezados del CSV
-    public $selectedField; // Campo seleccionado para configurar
-    public $fieldsConfigurations = []; // Almacenar las configuraciones de cada campo
+    public $image;
+    public $csvData = [];
+    public $csvHeaders = [];
+    public $selectedField;
+    public $fieldsConfigurations = [];
     public $csv;
     public $textSize;
     public $textColor;
@@ -43,28 +43,23 @@ class UploadCertificate extends Component
         $this->fontFamily = $this->fieldsConfigurations[$this->selectedField]['fontFamily'] ?? null;
         $this->textX = $this->fieldsConfigurations[$this->selectedField]['textX'] ?? null;
         $this->textY = $this->fieldsConfigurations[$this->selectedField]['textY'] ?? null;
-        // ... y así sucesivamente para las demás propiedades
     }
 
-    // Cargar y procesar el archivo CSV
     public function updatedCsv()
     {
         $this->validate([
             'csv' => 'required|mimes:csv,txt|max:1024',
         ]);
 
-        // Leer el archivo CSV
         $path = $this->csv->getRealPath();
         $data = array_map('str_getcsv', file($path));
 
-        // Guardar los encabezados (primera fila del CSV)
         $this->csvHeaders = array_shift($data);
 
-        // Guardar el resto del contenido del CSV (los valores)
         $this->csvData = $data;
         foreach ($this->csvHeaders as $header) {
             $this->fieldsConfigurations[$header] = [
-                'text' => $header,  // Mostrar el texto del header
+                'text' => $header,
                 'textSize' => 16,
                 'textColor' => '#000000',
                 'fontFamily' => 'Arial',
@@ -72,85 +67,49 @@ class UploadCertificate extends Component
                 'textY' => 50,
             ];
         }
-        // dd($this->fieldsConfigurations);
     }
 
-    // public function updateFieldConfiguration($config)
-    // {
-    //     // Asegúrate de que el campo seleccionado tiene una configuración independiente
-    //     if ($this->selectedField) {
-    //         $this->fieldsConfigurations[$this->selectedField] = $config;
-    //         dd($config);
-    //     }
-    // }
+    public function generateCertificate(){
 
-    // public function generateCertificate(){
+        $this->validate([
+            'image' => 'required|image|max:1024',
+        ]);
 
-    //     $this->validate([
-    //         'image' => 'required|image|max:1024',
-    //     ]);
+        $imagePath = $this->image->store('certificates', 'public');
 
-    //     // Procesar el archivo CSV para obtener la lista de nombres de usuarios
-    //     $csvPath = $this->csv->store('csv_files', 'public');
-    //     $csvFile = fopen(storage_path('app/public/' . $csvPath), 'r');
-    //     $users = [];
+        foreach ($this->csvData as $row) {
 
-    //     while (($data = fgetcsv($csvFile, 1000, ',')) !== false) {
-    //         $userName = trim($data[0]); // Eliminar espacios en blanco antes y después del nombre
-    //         if (!empty($userName)) { // Solo agrega el nombre si no está vacío
-    //             $users[] = $userName;
-    //         }
-    //     }
+            $data = [
+                'image' => $imagePath,
+                'qrCode' => base64_encode(QrCode::format('png')->size(300)->generate(route('certificate.view', ['user' => $row[0]]))),
+            ];
 
-    //     fclose($csvFile);
+            $updatedConfigurations = [];
 
-    //     // Iterar sobre los nombres de los usuarios y generar un PDF para cada uno
-    //     foreach ($users as $user) {
-    //         $this->generateCertificateForUser($user);
-    //     }
+            foreach ($this->csvHeaders as $key => $header) {
+                // $cleanUserName = trim($row[$key], "\xEF\xBB\xBF");
+                // $text = preg_replace('/[^A-Za-z0-9\-]/', '', $cleanUserName);
+                $updatedConfigurations[$header] = [
+                    'text' => $row[$key],
+                    'textSize' => $this->fieldsConfigurations[$header]['textSize'],
+                    'textColor' => $this->fieldsConfigurations[$header]['textColor'],
+                    'fontFamily' => $this->fieldsConfigurations[$header]['fontFamily'],
+                    'textX' => $this->fieldsConfigurations[$header]['textX'],
+                    'textY' => $this->fieldsConfigurations[$header]['textY'],
+                ];
+            }
 
-    //     session()->flash('message', 'Certificados generados con éxito.');
+            $data['fieldsConfigurations'] = $updatedConfigurations;
 
-    //     // return response()->streamDownload(function () use ($pdf) {
-    //     //     echo $pdf->stream();
-    //     // }, 'name.pdf');
-    // }
+            return redirect()->route('certificate.preview', ['data' => $data]);
 
-    // public function generateCertificateForUser($userName)
-    // {
-    //     $cleanUserName = trim($userName, "\xEF\xBB\xBF");
+            // // Guardar el PDF
+            // $fileName = 'certificates/' . preg_replace('/[^A-Za-z0-9\-]/', '', $cleanUserName) . '.pdf';
+            // Storage::disk('public')->put($fileName, $pdf->output());
+        }
 
-    //     $imagePath = $this->image->store('certificates', 'public');
-
-    //     // Generar la URL del certificado
-    //     $certificateUrl = route('certificate.view', ['user' => $cleanUserName]);
-
-    //     // Generar el QR Code con la URL
-    //     $qrCode = base64_encode(QrCode::format('png')->size(300)->generate($certificateUrl));
-
-    //     $data = [
-    //         'image' => $imagePath,
-    //         'text' => $cleanUserName,
-    //         'textX' => $this->textX,
-    //         'textY' => $this->textY,
-    //         'textSize' => $this->textSize,
-    //         'textColor' => $this->textColor,
-    //         'fontFamily' => $this->fontFamily,
-    //         'qrCode' => $qrCode
-    //     ];
-
-    //     $pdf = Pdf::loadView('pdf.certificate', $data)
-    //                 ->setPaper('A4', 'landscape')
-    //                 ->setOption('margin', '0');
-
-    //     // Guardar cada PDF en una carpeta de certificados con el nombre del usuario
-
-    //     $pdfOutput = $pdf->output();
-    //     $fileName = 'certificates/' . preg_replace('/[^A-Za-z0-9\-]/', '', $cleanUserName) . '.pdf';
-    //     Storage::disk('public')->put($fileName, $pdfOutput);
-
-
-    // }
+        session()->flash('message', 'Certificados generados con éxito.');
+    }
 
     public function render()
     {
