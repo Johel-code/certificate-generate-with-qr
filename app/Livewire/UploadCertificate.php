@@ -26,6 +26,19 @@ class UploadCertificate extends Component
     public $fontFamily;
     public $textX;
     public $textY;
+    public $qrSize;
+    public $qrX;
+    public $qrY;
+
+    public function mount()
+    {
+        // Configuración inicial del QR
+        $this->fieldsConfigurations['qrCode'] = [
+            'qrSize' => 50,  // Tamaño del QR
+            'qrX' => 50,  // Posición X del QR
+            'qrY' => 50,  // Posición Y del QR
+        ];
+    }
 
     public function updateFieldConfiguration($fieldId, array $data)
     {
@@ -43,6 +56,9 @@ class UploadCertificate extends Component
         $this->fontFamily = $this->fieldsConfigurations[$this->selectedField]['fontFamily'] ?? null;
         $this->textX = $this->fieldsConfigurations[$this->selectedField]['textX'] ?? null;
         $this->textY = $this->fieldsConfigurations[$this->selectedField]['textY'] ?? null;
+        $this->qrSize = $this->fieldsConfigurations[$this->selectedField]['qrSize'] ?? null;
+        $this->qrX = $this->fieldsConfigurations[$this->selectedField]['qrX'] ?? null;
+        $this->qrY = $this->fieldsConfigurations[$this->selectedField]['qrY'] ?? null;
     }
 
     public function updatedCsv()
@@ -63,7 +79,7 @@ class UploadCertificate extends Component
                 'textSize' => 16,
                 'textColor' => '#000000',
                 'fontFamily' => 'Arial',
-                'textX' => 50,
+                'textX' => 150,
                 'textY' => 50,
             ];
         }
@@ -80,6 +96,11 @@ class UploadCertificate extends Component
         $zip = new \ZipArchive();
         $zip->open(storage_path('app/public/' . $zipFileName), \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
 
+        $data = [
+            'qrX' => $this->fieldsConfigurations['qrCode']['qrX'],
+            'qrY' => $this->fieldsConfigurations['qrCode']['qrY'],
+        ];
+
         foreach ($this->csvData as $row) {
             $updatedConfigurations = [];
             foreach ($this->csvHeaders as $key => $header) {
@@ -94,9 +115,9 @@ class UploadCertificate extends Component
             }
 
             // Preparar los datos para el certificado
-            $data = [
+            $data += [
                 'image' => $imagePath,
-                'qrCode' => base64_encode(QrCode::format('png')->size(300)->generate(route('certificate.view', ['user' => $row[0]]))),
+                'qrCode' => base64_encode(QrCode::format('png')->size($this->fieldsConfigurations['qrCode']['qrSize'])->generate(route('certificate.view', ['user' => $row[0]]))),
                 'fieldsConfigurations' => $updatedConfigurations,
             ];
 
@@ -125,7 +146,8 @@ class UploadCertificate extends Component
 
     public function render()
     {
-        return view('livewire.upload-certificate');
+        $qrCode = base64_encode(QrCode::format('png')->generate('Vista Previa QR'));
+        return view('livewire.upload-certificate', compact('qrCode'));
     }
 
 }

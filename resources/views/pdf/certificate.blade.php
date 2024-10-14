@@ -24,11 +24,6 @@
             height: 100%;
             object-fit: cover;
         }
-        .qr-code {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-        }
     </style>
 </head>
 <body>
@@ -45,7 +40,7 @@
                 {{ $value['text'] }}
             </div>
         @endforeach
-        <div class="qr-code">
+        <div style="position: absolute; top: {{ $data['qrY'] }}px; left: {{ $data['qrX'] }}px;">
             <img src="data:image/png;base64, {{ $data['qrCode'] }}" alt="QR Code">
         </div>
     </div>
