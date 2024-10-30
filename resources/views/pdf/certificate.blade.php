@@ -40,6 +40,15 @@
                 {{ $value['text'] }}
             </div>
         @endforeach
+        <div style="
+                position: absolute;
+                left: {{ $data['customTextX'] }}px;
+                top: {{ $data['customTextY'] }}px;
+                width: {{ $data['customTextWidth'] }}px;
+                height: {{ $data['customTextHeight'] }}px;
+                text-align:{{ $data['alignment'] }};">
+            {!! $data['customText'] !!}
+        </div>
         <div style="position: absolute; top: {{ $data['qrY'] }}px; left: {{ $data['qrX'] }}px;">
             <img src="data:image/png;base64, {{ $data['qrCode'] }}" alt="QR Code">
         </div>

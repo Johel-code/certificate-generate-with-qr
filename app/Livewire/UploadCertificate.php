@@ -29,6 +29,12 @@ class UploadCertificate extends Component
     public $qrSize;
     public $qrX;
     public $qrY;
+    public $customText= "";
+    public $customTextWidth = 400;
+    public $customTextHeight = 200;
+    public $customTextX = 0;
+    public $customTextY = 0;
+    public $alignment = 'center';
 
     public function mount()
     {
@@ -96,14 +102,16 @@ class UploadCertificate extends Component
         $zip = new \ZipArchive();
         $zip->open(storage_path('app/public/' . $zipFileName), \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
 
-        $data = [
-            'qrX' => $this->fieldsConfigurations['qrCode']['qrX'],
-            'qrY' => $this->fieldsConfigurations['qrCode']['qrY'],
-        ];
-
         foreach ($this->csvData as $row) {
+
+            $contentWithBold = preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $this->customText);
+            $templateText = nl2br($contentWithBold);
+
             $updatedConfigurations = [];
             foreach ($this->csvHeaders as $key => $header) {
+
+                $templateText = str_replace("{{ $header }}", $row[$key], $templateText);
+
                 $updatedConfigurations[$header] = [
                     'text' => $row[$key],
                     'textSize' => $this->fieldsConfigurations[$header]['textSize'],
@@ -115,16 +123,25 @@ class UploadCertificate extends Component
             }
 
             // Preparar los datos para el certificado
-            $data += [
+            $data = [
                 'image' => $imagePath,
                 'qrCode' => base64_encode(QrCode::format('png')->size($this->fieldsConfigurations['qrCode']['qrSize'])->generate(route('certificate.view', ['user' => $row[0]]))),
                 'fieldsConfigurations' => $updatedConfigurations,
+                'customText' => $templateText,
+                'alignment' => $this->alignment,
+                'customTextWidth' => $this->customTextWidth,
+                'customTextHeight' => $this->customTextHeight,
+                'customTextX' => $this->customTextX,
+                'customTextY' => $this->customTextY,
+                'qrX' => $this->fieldsConfigurations['qrCode']['qrX'],
+                'qrY' => $this->fieldsConfigurations['qrCode']['qrY'],
             ];
 
             // Generar el PDF
             $pdf = Pdf::loadView('pdf.certificate', compact('data'))
-                    ->setPaper('A4', 'landscape')
-                    ->setOption('margin', '0');
+                    ->setPaper('letter')
+                    ->setOption('margin', '0')
+                    ->setOption('dpi', 72);
 
             // Guardar cada PDF individual en un archivo
             $fileName = 'certificates/' . preg_replace('/[^A-Za-z0-9\-]/', '', $row[0]) . '.pdf';
