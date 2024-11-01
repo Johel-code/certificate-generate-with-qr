@@ -11,8 +11,23 @@
 
                 <!-- Input para el contenido personalizado -->
                 <label class="block text-sm font-medium text-gray-700">Texto personalizado</label>
-                {{-- <textarea wire:model="customText" class="block w-full mt-2 mb-4 text-sm text-gray-700 border border-gray-300 rounded-md"></textarea> --}}
                 <textarea x-model="customText" class="block w-full mt-2 mb-4 text-sm text-gray-700 border border-gray-300 rounded-md"></textarea>
+
+                <!-- Inputs dinamicos para varias areas de texto -->
+                {{-- <template x-for="(fieldConfig, field) in fieldsConfigurations" :key="field">
+                    <div>
+                        <template x-if="fieldConfig.type === 'area'">
+                            <div class="mt-4">
+                                <label class="" x-text="fieldConfig.label"></label>
+                                <textarea
+                                    :id="field"
+                                    x-model="fieldConfig.text"
+                                    class="block w-full mt-2 mb-4 text-sm text-gray-700 border border-gray-300 rounded-md"
+                                ></textarea>
+                            </div>
+                        </template>
+                    </div>
+                </template> --}}
 
                 {{-- <button @click="boldText" class="px-4 py-2 text-white bg-blue-500 rounded">Negrita</button> --}}
                 <!-- Alignment Buttons -->
@@ -26,9 +41,16 @@
                 <div :class="`text-${alignment} p-4 text-center bg-gray-100 border rounded`">
                     <div x-html="formattedContent"></div>
                 </div> --}}
+
             </div>
 
             <div class="flex w-3/4" x-data="dragText()">
+                @if(!$selectedField && $image)
+                    <div class="mt-4">
+                        <label for="opacityRange" class="block text-gray-700">Transparencia:</label>
+                        <input type="range" id="opacityRange" min="0" max="1" step="0.1" x-model="opacity" class="w-full mt-2">
+                    </div>
+                @endif
                 @if ($selectedField)
 
                     @if($selectedField === 'qrCode')
@@ -60,7 +82,7 @@
                         <div class="p-4">
                             <label class="block mt-4 text-sm font-medium text-gray-700">Fuente del texto</label>
                             <select x-model="fontFamily" @input="$wire.updateFieldConfiguration('{{ $selectedField }}', { fontFamily })" class="block w-full mt-1 border border-gray-300 rounded-md">
-                                <option value="Arial">Arial</option>
+                                <option value="Helvetica">Helvetica</option>
                                 <option value="Times-Roman">Times-Roman</option>
                                 <option value="Courier">Courier</option>
                             </select>
@@ -90,20 +112,27 @@
                         <label class="block text-sm font-medium text-gray-700">Selecciona un campo para configurar</label>
                         <select wire:model.change="selectedField" class="block w-full mt-1 border border-gray-300 rounded-md">
                             <option value="">Selecciona un campo</option>
-                            @foreach ($csvHeaders as $header)
-                                <option value="{{ $header }}">{{ $header }}</option>
+                            @foreach ($fieldsConfigurations as $field => $config)
+                                <option value="{{ $field }}">{{ $config['label'] }}</option>
                             @endforeach
                             <!-- Añadir opción QR -->
-                            <option value="qrCode">QR Code</option>
+                            {{-- <option value="qrCode">QR Code</option> --}}
                         </select>
                     </div>
+
+                    <!-- Boton para agregar Area de texto -->
+                    {{-- <div>
+                        <button wire:click='addTextArea' class="p-2 text-white bg-blue-500 rounded">
+                            Agregar Área de Texto
+                        </button>
+                    </div> --}}
                 </div>
             </div>
 
             <div class="relative w-2/3 p-4">
                 @if ($image)
                     <div class="relative inline-block">
-                        <img src="{{ $image->temporaryUrl() }}" alt="Vista previa del certificado" class="block w-full h-auto border border-gray-300 rounded-md"
+                        <img x-data="dragText()" :style="{ opacity: opacity }" src="{{ $image->temporaryUrl() }}" alt="Vista previa del certificado" class="block w-full h-auto border border-gray-300 rounded-md"
                                 id="previewImage" style="width: 612px; height: 792px;">
 
                         <div x-data="resizeableText()">
@@ -117,10 +146,7 @@
                             >
                                 <!-- Contenido de texto con estilo personalizado -->
                                 <div x-data="textEditor()" >
-                                    <div>
-
-                                        <div :class="`text-${alignment}`" :style="`font-size: ${textSize}px; color: ${textColor}; font-family: ${fontFamily};`" x-html="formattedContent"></div>
-                                    </div>
+                                    <div :class="`text-${alignment}`" :style="`font-size: ${customTextSize}px; color: ${customTextColor}; font-family: ${customFontFamily};`" x-html="formattedContent"></div>
                                 </div>
 
                                 <!-- Controladores de redimensionamiento (resize handles) -->
@@ -132,23 +158,50 @@
                         </div>
 
                         <div x-data="dragText()">
-                            <div class="absolute" :style="`top: ${fieldsConfigurations['qrCode'].qrY}px; left: ${fieldsConfigurations['qrCode'].qrX}px;`">
+
+                            <!-- Qr Code -->
+                            {{-- <div class="absolute" :style="`top: ${fieldsConfigurations['qrCode'].qrY}px; left: ${fieldsConfigurations['qrCode'].qrX}px;`">
                                 <!-- Previsualización del QR genérico, puedes usar un placeholder o un QR básico -->
                                 <img src="data:image/png;base64,{{ $qrCode }}" :style="`width: ${fieldsConfigurations['qrCode'].qrSize}px;`" alt="Vista Previa del QR">
-                            </div>
+                            </div> --}}
+
                             <div>
                                 <template x-for="(fieldConfig, field) in fieldsConfigurations" :key="field">
-                                    <div
-                                        @mousedown="startDrag(field, $event)"
-                                        @mouseup="stopDrag()"
-                                        @mousemove="dragField(field, $event)"
-                                        :style="`position: absolute; top: ${fieldConfig.textY}px; left: ${fieldConfig.textX}px; font-size: ${fieldConfig.textSize}px; color: ${fieldConfig.textColor}; font-family: ${fieldConfig.fontFamily};`"
-                                        class="draggable-field"
-                                        x-text="fieldConfig.text">
-                                    </div>
+                                    <template x-if="fieldConfig.type === 'text'">
+                                        <div
+                                            @mousedown="startDrag(field, $event)"
+                                            @mouseup="stopDrag()"
+                                            @mousemove="dragField(field, $event)"
+                                            :style="`position: absolute; top: ${fieldConfig.textY}px; left: ${fieldConfig.textX}px; font-size: ${fieldConfig.textSize}px; color: ${fieldConfig.textColor}; font-family: ${fieldConfig.fontFamily};`"
+                                            class="draggable-field"
+                                            x-text="fieldConfig.text">
+                                        </div>
+                                    </template>
+
+                                    <!-- Area de texto en vista previa -->
+                                    {{-- <template x-if="fieldConfig.type === 'area'">
+                                        <div x-data="resizeableText()">
+                                            <div
+                                                class="absolute border-2 border-gray-400"
+                                                :style="`position: absolute; top: ${fieldConfig.textY}px; left: ${fieldConfig.textX}px; width: ${fieldConfig.width}px; height: ${fieldConfig.height}px; font-size: ${fieldConfig.textSize}px; color: ${fieldConfig.textColor}; font-family: ${fieldConfig.fontFamily};`"
+                                                @mousedown="startDrag(field, $event)"
+                                                @mouseup="stopDrag()"
+                                                @mousemove="handleMouseMove($event)"
+                                            >
+
+                                                <div x-data="textEditor()">
+                                                    <div :class="`text-${fieldConfig.aligment}`" :style="`font-size: ${fieldConfig.textSize}px; color: ${fieldConfig.textColor}; font-family: ${fieldConfig.fontFamily};`" x-html="formattedContent"></div>
+                                                </div>
+
+                                                <div
+                                                    class="absolute bottom-0 right-0 w-3 h-3 bg-gray-600 cursor-se-resize"
+                                                    @mousedown="startResize($event)">
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </template> --}}
                                 </template>
-
-
 
                             </div>
 
@@ -177,6 +230,7 @@
             qrX: @entangle('qrX'),
             qrY: @entangle('qrY'),
             fieldsConfigurations: @entangle('fieldsConfigurations'),
+            opacity: @entangle('opacity'),
 
             startDrag(field, event) {
                 this.selectedField = field;
@@ -278,7 +332,13 @@
     function textEditor() {
         return {
             customText: @entangle('customText'), // Nuevo texto personalizado
+            customTextSize: @entangle('customTextSize'),
+            customTextColor: @entangle('customTextColor'),
+            customFontFamily: @entangle('customFontFamily'),
             alignment: @entangle('alignment'), // Nuevo texto personalizado
+            // fieldsConfigurations: @entangle('fieldsConfigurations'),
+            // selectedField: @entangle('selectedField'),
+            // customText: '',
 
             get formattedContent() {
                 // Convierte el texto con las etiquetas HTML necesarias para mostrarlo en la vista previa

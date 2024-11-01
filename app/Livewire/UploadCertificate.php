@@ -34,16 +34,45 @@ class UploadCertificate extends Component
     public $customTextHeight = 200;
     public $customTextX = 0;
     public $customTextY = 0;
+    public $customTextSize = 22;
+    public $customTextColor = '#000000';
+    public $customFontFamily = 'Helvetica';
     public $alignment = 'center';
+    public $opacity = 1;
+    public $textAreaCounter = 1;
 
-    public function mount()
+    // public function mount()
+    // {
+    //     // Configuración inicial del QR
+    //     $this->fieldsConfigurations['qrCode'] = [
+    //         'qrSize' => 50,  // Tamaño del QR
+    //         'qrX' => 50,  // Posición X del QR
+    //         'qrY' => 50,  // Posición Y del QR
+    //     ];
+    // }
+
+    public function addTextArea()
     {
-        // Configuración inicial del QR
-        $this->fieldsConfigurations['qrCode'] = [
-            'qrSize' => 50,  // Tamaño del QR
-            'qrX' => 50,  // Posición X del QR
-            'qrY' => 50,  // Posición Y del QR
+        $fieldId = 'area_' . $this->textAreaCounter;
+
+        // Configuración predeterminada para el área de texto
+        $this->fieldsConfigurations[$fieldId] = [
+            'type' => 'area',
+            'text' => '',
+            'textSize' => 16,
+            'textColor' => '#000000',
+            'fontFamily' => 'Arial',
+            'textX' => 0,
+            'textY' => 0,
+            'width' => 200,   // Ancho predeterminado para el área de texto
+            'height' => 100,  // Alto predeterminado para el área de texto
+            'aligment' => 'center',
+            'label' => 'Área de texto ' . $fieldId
         ];
+
+        $this->textAreaCounter++;
+        // Seleccionar automáticamente el nuevo campo para editar
+        $this->selectedField = $fieldId;
     }
 
     public function updateFieldConfiguration($fieldId, array $data)
@@ -87,6 +116,8 @@ class UploadCertificate extends Component
                 'fontFamily' => 'Arial',
                 'textX' => 150,
                 'textY' => 50,
+                'type' => 'text',
+                'label' => $header
             ];
         }
     }
@@ -125,7 +156,8 @@ class UploadCertificate extends Component
             // Preparar los datos para el certificado
             $data = [
                 'image' => $imagePath,
-                'qrCode' => base64_encode(QrCode::format('png')->size($this->fieldsConfigurations['qrCode']['qrSize'])->generate(route('certificate.view', ['user' => $row[0]]))),
+                'opacity' => $this->opacity,
+                // 'qrCode' => base64_encode(QrCode::format('png')->size($this->fieldsConfigurations['qrCode']['qrSize'])->generate(route('certificate.view', ['user' => $row[0]]))),
                 'fieldsConfigurations' => $updatedConfigurations,
                 'customText' => $templateText,
                 'alignment' => $this->alignment,
@@ -133,8 +165,11 @@ class UploadCertificate extends Component
                 'customTextHeight' => $this->customTextHeight,
                 'customTextX' => $this->customTextX,
                 'customTextY' => $this->customTextY,
-                'qrX' => $this->fieldsConfigurations['qrCode']['qrX'],
-                'qrY' => $this->fieldsConfigurations['qrCode']['qrY'],
+                'customTextSize' => $this->customTextSize,
+                'customTextColor' => $this->customTextColor,
+                'customFontFamily' => $this->customFontFamily,
+                // 'qrX' => $this->fieldsConfigurations['qrCode']['qrX'],
+                // 'qrY' => $this->fieldsConfigurations['qrCode']['qrY'],
             ];
 
             // Generar el PDF

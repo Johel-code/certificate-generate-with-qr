@@ -22,7 +22,19 @@
             left: 0;
             width: 100%;
             height: 100%;
+            opacity: {{ $data['opacity'] }};
             object-fit: cover;
+        }
+        .text-area {
+            position: absolute;
+            left: {{ $data['customTextX'] }}px;
+            top: {{ $data['customTextY'] }}px;
+            width: {{ $data['customTextWidth'] }}px;
+            height: {{ $data['customTextHeight'] }}px;
+            font-size: {{ $data['customTextSize'] }}px;
+            color: {{ $data['customTextColor'] }};
+            font-family: {{ $data['customFontFamily'] }};
+            text-align: {{ $data['alignment'] }};
         }
     </style>
 </head>
@@ -40,17 +52,8 @@
                 {{ $value['text'] }}
             </div>
         @endforeach
-        <div style="
-                position: absolute;
-                left: {{ $data['customTextX'] }}px;
-                top: {{ $data['customTextY'] }}px;
-                width: {{ $data['customTextWidth'] }}px;
-                height: {{ $data['customTextHeight'] }}px;
-                text-align:{{ $data['alignment'] }};">
+        <div class="text-area">
             {!! $data['customText'] !!}
-        </div>
-        <div style="position: absolute; top: {{ $data['qrY'] }}px; left: {{ $data['qrX'] }}px;">
-            <img src="data:image/png;base64, {{ $data['qrCode'] }}" alt="QR Code">
         </div>
     </div>
 </body>
