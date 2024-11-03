@@ -68,6 +68,40 @@
                             <label class="block mt-4 text-sm font-medium text-gray-700">Posición Y</label>
                             <input type="number" x-model="qrY" @input="$wire.updateFieldConfiguration('{{ $selectedField }}', { qrY })" class="block w-full mt-1 border border-gray-300 rounded-md">
                         </div>
+                    @elseif( $selectedField === 'textArea')
+                        <div class="p-4">
+                            <label class="block mt-4 text-sm font-medium text-gray-700">Tamaño del texto</label>
+                            <input type="range" x-model="customTextSize" @input="$wire.updateFieldConfiguration('{{ $selectedField }}', { textSize })" min="10" max="100" class="block w-full mt-1">
+                        </div>
+
+                        <div class="p-4">
+                            <label class="block mt-4 text-sm font-medium text-gray-700">Color del texto</label>
+                            <input type="color" x-model="customTextColor" @input="$wire.updateFieldConfiguration('{{ $selectedField }}', { textColor })" class="block w-full h-10 p-0 mt-1 border border-gray-300 rounded-md">
+                        </div>
+
+                        <div class="p-4">
+                            <label class="block mt-4 text-sm font-medium text-gray-700">Fuente del texto</label>
+                            <select x-model="customFontFamily" @input="$wire.updateFieldConfiguration('{{ $selectedField }}', { fontFamily })" class="block w-full mt-1 border border-gray-300 rounded-md">
+                                <option value="Helvetica">Helvetica</option>
+                                <option value="Times-Roman">Times-Roman</option>
+                                <option value="Courier">Courier</option>
+                            </select>
+                        </div>
+
+                        <div x-data="textEditor()" class="p-4 text-center">
+                            <label class="block mt-4 text-sm font-medium text-gray-700">Alineación</label>
+                            <div class="flex mt-1 space-x-2">
+                                <button type="button" @click="alignment = 'left'; $wire.updateFieldConfiguration('{{ $selectedField }}', { alignment })" class="px-4 py-2 border rounded-md" :class="{ 'bg-gray-300': alignment === 'left' }">
+                                    <i class="text-xl fas fa-align-left"></i>
+                                </button>
+                                <button type="button" @click="alignment = 'center'; $wire.updateFieldConfiguration('{{ $selectedField }}', { alignment })" class="px-4 py-2 border rounded-md" :class="{ 'bg-gray-300': alignment === 'center' }">
+                                    <i class="text-xl fas fa-align-center"></i>
+                                </button>
+                                <button type="button" @click="alignment = 'right'; $wire.updateFieldConfiguration('{{ $selectedField }}', { alignment })" class="px-4 py-2 border rounded-md" :class="{ 'bg-gray-300': alignment === 'right' }">
+                                    <i class="text-xl fas fa-align-right"></i>
+                                </button>
+                            </div>
+                        </div>
                     @else
                         <div class="p-4">
                             <label class="block mt-4 text-sm font-medium text-gray-700">Tamaño del texto</label>
@@ -97,13 +131,16 @@
                             <label class="block mt-4 text-sm font-medium text-gray-700">Posición Y</label>
                             <input type="number" x-model="textY" @input="$wire.updateFieldConfiguration('{{ $selectedField }}', { textY })" class="block w-full mt-1 border border-gray-300 rounded-md">
                         </div>
-
                     @endif
 
-                    <button type="submit" class="block p-4 font-semibold text-white bg-blue-600 rounded hover:bg-blue-700">Generar Certificado</button>
-                @endif
+                    @endif
+                </div>
+            </form>
+            <div class="flex justify-center mt-6">
+                <button wire:click.prevent="generateCertificate" class="px-6 py-3 font-semibold text-white bg-blue-600 rounded hover:bg-blue-700">
+                    Generar Certificado
+                </button>
             </div>
-        </form>
 
         <div class="flex">
             <div class="w-1/3 p-4 bg-gray-100">
@@ -231,6 +268,9 @@
             qrY: @entangle('qrY'),
             fieldsConfigurations: @entangle('fieldsConfigurations'),
             opacity: @entangle('opacity'),
+            customTextSize: @entangle('customTextSize'),
+            customTextColor: @entangle('customTextColor'),
+            customFontFamily: @entangle('customFontFamily'),
 
             startDrag(field, event) {
                 this.selectedField = field;
@@ -342,7 +382,9 @@
 
             get formattedContent() {
                 // Convierte el texto con las etiquetas HTML necesarias para mostrarlo en la vista previa
-                return this.customText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                return this.customText
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') //todo implementar saltos de linea
+                    .replace(/\n/g, '<br>');
             },
 
             boldText() {

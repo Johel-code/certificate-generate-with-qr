@@ -41,15 +41,28 @@ class UploadCertificate extends Component
     public $opacity = 1;
     public $textAreaCounter = 1;
 
-    // public function mount()
-    // {
-    //     // Configuración inicial del QR
-    //     $this->fieldsConfigurations['qrCode'] = [
-    //         'qrSize' => 50,  // Tamaño del QR
-    //         'qrX' => 50,  // Posición X del QR
-    //         'qrY' => 50,  // Posición Y del QR
-    //     ];
-    // }
+    public function mount()
+    {
+        // Configuración inicial del QR
+        // $this->fieldsConfigurations['qrCode'] = [
+        //     'qrSize' => 50,  // Tamaño del QR
+        //     'qrX' => 50,  // Posición X del QR
+        //     'qrY' => 50,  // Posición Y del QR
+        // ];
+        $this->fieldsConfigurations['textArea'] = [
+            'type' => 'area',
+            'text' => '',
+            'textSize' => 50,  // Tamaño del QR
+            'textColor' => 50,  // Posición X del QR
+            'fontFamily' => 50,  // Posición Y del QR
+            'textX' => 0,
+            'textY' => 0,
+            'width' => 400,
+            'height' => 200,
+            'alignment' => 'center',
+            'label' => 'Área de texto'
+        ];
+    }
 
     public function addTextArea()
     {
@@ -66,7 +79,7 @@ class UploadCertificate extends Component
             'textY' => 0,
             'width' => 200,   // Ancho predeterminado para el área de texto
             'height' => 100,  // Alto predeterminado para el área de texto
-            'aligment' => 'center',
+            'alignment' => 'center',
             'label' => 'Área de texto ' . $fieldId
         ];
 
@@ -91,9 +104,15 @@ class UploadCertificate extends Component
         $this->fontFamily = $this->fieldsConfigurations[$this->selectedField]['fontFamily'] ?? null;
         $this->textX = $this->fieldsConfigurations[$this->selectedField]['textX'] ?? null;
         $this->textY = $this->fieldsConfigurations[$this->selectedField]['textY'] ?? null;
+
         $this->qrSize = $this->fieldsConfigurations[$this->selectedField]['qrSize'] ?? null;
         $this->qrX = $this->fieldsConfigurations[$this->selectedField]['qrX'] ?? null;
         $this->qrY = $this->fieldsConfigurations[$this->selectedField]['qrY'] ?? null;
+
+        $this->customTextSize = $this->fieldsConfigurations[$this->selectedField]['textSize'] ?? null;
+        $this->customTextColor = $this->fieldsConfigurations[$this->selectedField]['textColor'] ?? null;
+        $this->customFontFamily = $this->fieldsConfigurations[$this->selectedField]['fontFamily'] ?? null;
+        $this->alignment = $this->fieldsConfigurations[$this->selectedField]['alignment'] ?? null;
     }
 
     public function updatedCsv()
@@ -135,8 +154,7 @@ class UploadCertificate extends Component
 
         foreach ($this->csvData as $row) {
 
-            $contentWithBold = preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $this->customText);
-            $templateText = nl2br($contentWithBold);
+            $templateText = nl2br(e(preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $this->customText)));
 
             $updatedConfigurations = [];
             foreach ($this->csvHeaders as $key => $header) {
