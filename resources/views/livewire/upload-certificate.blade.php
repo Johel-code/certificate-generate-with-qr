@@ -157,11 +157,16 @@
                         </select>
                     </div>
 
-                    <div x-data="certificateEditor()">
+                    <div x-data="certificateEditor()" x-init="init()">
                         <label class="block text-sm font-medium text-gray-700">Número de firmas</label>
-                        <input type="number" wire:model.change="signatureCount" min="1" class="block w-full mt-2 mb-4 text-sm text-gray-700 border border-gray-300 rounded-md">
+                        <input type="number" x-model="signatureCount" @input="logAndRecalculate" min="1" class="block w-full mt-2 mb-4 text-sm text-gray-700 border border-gray-300 rounded-md">
 
+                        <div>
+                            <button @click="calculateSignatures">Recalcular firmas</button>
+    
+                        </div>
                     </div>
+
 
                     <!-- Boton para agregar Area de texto -->
                     {{-- <div>
@@ -179,44 +184,35 @@
                                 id="previewImage" style="width: 612px; height: 792px;">
 
                         <!-- Cuadro delimitador para firmas -->
-                         <div x-data="certificateEditor()">
+                         <div x-data="certificateEditor()" x-init="init()" @resiza.window="calculateSignatures">
 
                             <div 
                                 class="relative border-2 border-blue-400"
-                                style="width: {{ $containerWidth }}px; height: {{ $containerHeight }}px;"
+                                x-ref="container"
                                 @mousedown="startDrag($event)"
                                 @mouseup="stopDrag()"
                                 @mousemove="handleMouseMove($event)"
                             >
 
-                                @php
-                                    $rows = ceil($signatureCount / 3); // Máximo 3 firmas por fila
-                                    $signaturesArray = array_chunk($signatures, 3);
-                                @endphp
-
-                                @foreach ($signaturesArray as $index => $row)
-                                
-                                    <div class="flex {{ count($row) < 3 ? 'justify-center' : 'justify-between'}} mb-4"
-                                        style="width: 100%;"
+                                <template x-for="(row, rowIndex) in rows" :key="rowIndex">
+                                    <!-- Fila -->
+                                    <div 
+                                        class="flex mb-4"
+                                        :class="row.length < maxSignaturesPerRow ? 'justify-center' : 'justify-between'"
                                     >
-                                        @foreach ($row as $signature)
+                                        <template x-for="signature in row" :key="signature">
+                                            <!-- Firma -->
                                             <div 
                                                 class="flex flex-col items-center justify-center text-center border rounded p-2 bg-gray-100"
-                                                style="
-                                                    width: {{ $signatureWidth }}px;
-                                                    height: 100px;
-                                                "
+                                                :style="{ width: `${signatureWidth}px`, height: '100px' }"
                                             >
-                                                <div>
-                                                    <div class="border-b mb-2">Firma</div>
-                                                    <div class="font-bold">Juan Pérez</div>
-                                                    <div>Decano</div>
-                                                </div>
+                                                <div class="border-b mb-2">Firma</div>
+                                                <div class="font-bold">Nombre</div>
+                                                <div>Rol</div>
                                             </div>
-                                        @endforeach
-                                        
+                                        </template>
                                     </div>
-                                @endforeach
+                                </template>
                                 <!-- Distribuir las firmas -->
                                 
                             </div>
@@ -461,16 +457,16 @@
             isDragging: false,
             mouseX: 0,
             mouseY: 0,
-            signatureCount: 1,
-            signatures: [],
+            signatureCount: 2,
+            rows: [],
+            maxSignaturesPerRow: 1,
 
             init() {
-                this.$watch('signatureCount', () => {
-                    this.calculateSignatures();
-                });
-
-                this.$el.addEventListener('update-signatures', (event) => {
-                    this.signatureCount = event.detail;
+                this.$nextTick(() => {
+                    if (!this.$refs.container) {
+                        console.error("El contenedor no está definido.");
+                        return;
+                    }
                     this.calculateSignatures();
                 });
             },
@@ -491,38 +487,35 @@
                     this.mouseY = event.clientY;
                 }
             },
+            logAndRecalculate() {
+                console.log("Input detectado. Valor actual:", this.signatureCount);
+                this.calculateSignatures();
+            },
             // Método para calcular las posiciones de las firmas
             calculateSignatures() {
-                // Calculamos las filas y columnas disponibles
-                const rows = Math.floor(this.delimHeight / this.signatureHeight);
-                const cols = Math.floor(this.delimWidth / this.signatureWidth);
-                const maxSignatures = rows * cols;
+                console.log("Recalculando filas con count:", this.signatureCount);
 
-                // Si el número de firmas es mayor que el espacio disponible, lo limitamos
-                this.signatureCount = Math.min(this.signatureCount, maxSignatures);
-
-                // Creamos el arreglo de firmas con posiciones
-                const newSignatures = [];
-                for (let i = 0; i < this.signatureCount; i++) {
-                    const row = Math.floor(i / cols);  // Determina la fila
-                    const col = i % cols;  // Determina la columna
-
-                    // Calculamos las posiciones X e Y
-                    const signature = {
-                        x: col * this.signatureWidth + (this.delimWidth % this.signatureWidth) / 2,
-                        y: row * this.signatureHeight + (this.delimHeight % this.signatureHeight) / 2,
-                    };
-
-                    // Añadimos la firma al arreglo
-                    newSignatures.push(signature);
+                // Asegurar que el contenedor está definido
+                if (!this.$refs.container) {
+                    console.error("El contenedor no está definido.");
+                    return;
                 }
 
-                this.signatures = newSignatures;
+                const containerWidth = this.$refs.container.offsetWidth || 600; // Valor por defecto
+                this.maxSignaturesPerRow = Math.floor(containerWidth / this.signatureWidth); // Cantidad de firmas por fila
+                this.updateRows();
+            },
 
-                // Verificamos en la consola si las firmas se están calculando correctamente
-                this.$nextTick(() => {
-                    console.log('Firmas calculadas:', this.signatures);
-                });
+            updateRows() {
+                const signaturesArray = Array.from({ length: this.signatureCount }, (_, i) => i + 1);
+                this.rows = [];
+
+                // Agrupar firmas en filas según la capacidad máxima por fila
+                while (signaturesArray.length > 0) {
+                    this.rows.push(signaturesArray.splice(0, this.maxSignaturesPerRow));
+                }
+
+                console.log("Filas actualizadas: ", this.rows);
             },
             
         };
