@@ -182,21 +182,42 @@
                          <div x-data="certificateEditor()">
 
                             <div 
-                                class="absolute border-2 border-blue-400"
-                                :style="{ top: `${delimY}px`, left: `${delimX}px`, width: `${delimWidth}px`, height: `${delimHeight}px` }"
+                                class="relative border-2 border-blue-400"
+                                style="width: {{ $containerWidth }}px; height: {{ $containerHeight }}px;"
                                 @mousedown="startDrag($event)"
                                 @mouseup="stopDrag()"
                                 @mousemove="handleMouseMove($event)"
                             >
-                                <!-- Distribuir las firmas -->
-                                @foreach ($signatures as $signature)
-                                    <div 
-                                        class="absolute border p-2 text-center" 
-                                        style="top: {{ $signature['y'] }}px; left: {{ $signature['x'] }}px;"
+
+                                @php
+                                    $rows = ceil($signatureCount / 3); // Máximo 3 firmas por fila
+                                    $signaturesArray = array_chunk($signatures, 3);
+                                @endphp
+
+                                @foreach ($signaturesArray as $index => $row)
+                                
+                                    <div class="flex {{ count($row) < 3 ? 'justify-center' : 'justify-between'}} mb-4"
+                                        style="width: 100%;"
                                     >
-                                        hola mundo
+                                        @foreach ($row as $signature)
+                                            <div 
+                                                class="flex flex-col items-center justify-center text-center border rounded p-2 bg-gray-100"
+                                                style="
+                                                    width: {{ $signatureWidth }}px;
+                                                    height: 100px;
+                                                "
+                                            >
+                                                <div>
+                                                    <div class="border-b mb-2">Firma</div>
+                                                    <div class="font-bold">Juan Pérez</div>
+                                                    <div>Decano</div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                        
                                     </div>
                                 @endforeach
+                                <!-- Distribuir las firmas -->
                                 
                             </div>
                          </div>

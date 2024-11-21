@@ -42,6 +42,10 @@ class UploadCertificate extends Component
     public $textAreaCounter = 1;
     public $signatureCount =1;
     public $signatures = [];
+    public $containerWidth = 500; // Ancho del cuadro delimitador
+    public $containerHeight = 300; // Alto del cuadro delimitador
+    public $signatureWidth = 150; // Ancho de cada firma
+    public $signatureHeight = 100; // Alto de cada firma
 
     public function updatedSignatureCount($value){
         $this->calculateSignatures($value);
@@ -49,19 +53,7 @@ class UploadCertificate extends Component
 
     public function calculateSignatures($count)
     {
-        $rows = 3; // Cambia según tu lógica
-        $cols = 4;
-        $this->signatures = [];
-
-        for ($i = 0; $i < $count; $i++) {
-            $row = floor($i / $cols);
-            $col = $i % $cols;
-
-            $this->signatures[] = [
-                'x' => $col * 100, // Cambia según tu lógica
-                'y' => $row * 50,  // Cambia según tu lógica
-            ];
-        }
+        $this->signatures = range(1, $count);
     }
 
     public function mount()
