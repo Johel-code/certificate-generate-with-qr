@@ -157,6 +157,12 @@
                         </select>
                     </div>
 
+                    <div x-data="certificateEditor()">
+                        <label class="block text-sm font-medium text-gray-700">Número de firmas</label>
+                        <input type="number" wire:model.change="signatureCount" min="1" class="block w-full mt-2 mb-4 text-sm text-gray-700 border border-gray-300 rounded-md">
+
+                    </div>
+
                     <!-- Boton para agregar Area de texto -->
                     {{-- <div>
                         <button wire:click='addTextArea' class="p-2 text-white bg-blue-500 rounded">
@@ -172,6 +178,29 @@
                         <img x-data="dragText()" :style="{ opacity: opacity }" src="{{ $image->temporaryUrl() }}" alt="Vista previa del certificado" class="block w-full h-auto border border-gray-300 rounded-md"
                                 id="previewImage" style="width: 612px; height: 792px;">
 
+                        <!-- Cuadro delimitador para firmas -->
+                         <div x-data="certificateEditor()">
+
+                            <div 
+                                class="absolute border-2 border-blue-400"
+                                :style="{ top: `${delimY}px`, left: `${delimX}px`, width: `${delimWidth}px`, height: `${delimHeight}px` }"
+                                @mousedown="startDrag($event)"
+                                @mouseup="stopDrag()"
+                                @mousemove="handleMouseMove($event)"
+                            >
+                                <!-- Distribuir las firmas -->
+                                @foreach ($signatures as $signature)
+                                    <div 
+                                        class="absolute border p-2 text-center" 
+                                        style="top: {{ $signature['y'] }}px; left: {{ $signature['x'] }}px;"
+                                    >
+                                        hola mundo
+                                    </div>
+                                @endforeach
+                                
+                            </div>
+                         </div>
+                        
                         <div x-data="resizeableText()">
                         <!-- Cuadro delimitador del texto personalizado -->
                             <div
@@ -399,5 +428,82 @@
                 }
             },
         }
+    }
+    function certificateEditor() {
+        return {
+            delimX: 50,
+            delimY: 50,
+            delimWidth: 500,
+            delimHeight: 300,
+            signatureWidth: 150,
+            signatureHeight: 100,
+            isDragging: false,
+            mouseX: 0,
+            mouseY: 0,
+            signatureCount: 1,
+            signatures: [],
+
+            init() {
+                this.$watch('signatureCount', () => {
+                    this.calculateSignatures();
+                });
+
+                this.$el.addEventListener('update-signatures', (event) => {
+                    this.signatureCount = event.detail;
+                    this.calculateSignatures();
+                });
+            },
+
+            startDrag(event) {
+                this.isDragging = true;
+                this.mouseX = event.clientX;
+                this.mouseY = event.clientY;
+            },
+            stopDrag() {
+                this.isDragging = false;
+            },
+            handleMouseMove(event) {
+                if (this.isDragging) {
+                    this.delimX += event.clientX - this.mouseX;
+                    this.delimY += event.clientY - this.mouseY;
+                    this.mouseX = event.clientX;
+                    this.mouseY = event.clientY;
+                }
+            },
+            // Método para calcular las posiciones de las firmas
+            calculateSignatures() {
+                // Calculamos las filas y columnas disponibles
+                const rows = Math.floor(this.delimHeight / this.signatureHeight);
+                const cols = Math.floor(this.delimWidth / this.signatureWidth);
+                const maxSignatures = rows * cols;
+
+                // Si el número de firmas es mayor que el espacio disponible, lo limitamos
+                this.signatureCount = Math.min(this.signatureCount, maxSignatures);
+
+                // Creamos el arreglo de firmas con posiciones
+                const newSignatures = [];
+                for (let i = 0; i < this.signatureCount; i++) {
+                    const row = Math.floor(i / cols);  // Determina la fila
+                    const col = i % cols;  // Determina la columna
+
+                    // Calculamos las posiciones X e Y
+                    const signature = {
+                        x: col * this.signatureWidth + (this.delimWidth % this.signatureWidth) / 2,
+                        y: row * this.signatureHeight + (this.delimHeight % this.signatureHeight) / 2,
+                    };
+
+                    // Añadimos la firma al arreglo
+                    newSignatures.push(signature);
+                }
+
+                this.signatures = newSignatures;
+
+                // Verificamos en la consola si las firmas se están calculando correctamente
+                this.$nextTick(() => {
+                    console.log('Firmas calculadas:', this.signatures);
+                });
+            },
+            
+        };
     }
 </script>

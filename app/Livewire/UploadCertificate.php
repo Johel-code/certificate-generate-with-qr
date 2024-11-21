@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
+//use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class UploadCertificate extends Component
 {
@@ -40,6 +40,29 @@ class UploadCertificate extends Component
     public $alignment = 'center';
     public $opacity = 1;
     public $textAreaCounter = 1;
+    public $signatureCount =1;
+    public $signatures = [];
+
+    public function updatedSignatureCount($value){
+        $this->calculateSignatures($value);
+    }
+
+    public function calculateSignatures($count)
+    {
+        $rows = 3; // Cambia según tu lógica
+        $cols = 4;
+        $this->signatures = [];
+
+        for ($i = 0; $i < $count; $i++) {
+            $row = floor($i / $cols);
+            $col = $i % $cols;
+
+            $this->signatures[] = [
+                'x' => $col * 100, // Cambia según tu lógica
+                'y' => $row * 50,  // Cambia según tu lógica
+            ];
+        }
+    }
 
     public function mount()
     {
@@ -128,16 +151,31 @@ class UploadCertificate extends Component
 
         $this->csvData = $data;
         foreach ($this->csvHeaders as $header) {
-            $this->fieldsConfigurations[$header] = [
-                'text' => $header,
-                'textSize' => 16,
-                'textColor' => '#000000',
-                'fontFamily' => 'Arial',
-                'textX' => 150,
-                'textY' => 50,
-                'type' => 'text',
-                'label' => $header
-            ];
+            if (str_starts_with($header, 'Firma')) {
+                // Configurar los campos para las firmas
+                $this->fieldsConfigurations[$header] = [
+                    'text' => $header,
+                    'textSize' => 12,
+                    'textColor' => '#000000',
+                    'fontFamily' => 'Arial',
+                    'textX' => 100, // Ajustar según la posición que desees
+                    'textY' => 200, // Ajustar según la posición que desees
+                    'type' => 'signature',
+                    'label' => $header
+                ];
+            } else {
+                // Configurar los campos regulares
+                $this->fieldsConfigurations[$header] = [
+                    'text' => $header,
+                    'textSize' => 16,
+                    'textColor' => '#000000',
+                    'fontFamily' => 'Arial',
+                    'textX' => 150,
+                    'textY' => 50,
+                    'type' => 'text',
+                    'label' => $header
+                ];
+            }
         }
     }
 
@@ -216,8 +254,8 @@ class UploadCertificate extends Component
 
     public function render()
     {
-        $qrCode = base64_encode(QrCode::format('png')->generate('Vista Previa QR'));
-        return view('livewire.upload-certificate', compact('qrCode'));
+        //$qrCode = base64_encode(QrCode::format('png')->generate('Vista Previa QR'));
+        return view('livewire.upload-certificate');
     }
 
 }
