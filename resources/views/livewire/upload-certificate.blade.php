@@ -157,15 +157,6 @@
                         </select>
                     </div>
 
-                    <div x-data="certificateEditor()" x-init="init()">
-                        <label class="block text-sm font-medium text-gray-700">Número de firmas</label>
-                        <input type="number" x-model="signatureCount" @input="logAndRecalculate" min="1" class="block w-full mt-2 mb-4 text-sm text-gray-700 border border-gray-300 rounded-md">
-
-                        <div>
-                            <button @click="calculateSignatures">Recalcular firmas</button>
-    
-                        </div>
-                    </div>
 
 
                     <!-- Boton para agregar Area de texto -->
@@ -185,10 +176,13 @@
 
                         <!-- Cuadro delimitador para firmas -->
                          <div x-data="certificateEditor()" x-init="init()" @resiza.window="calculateSignatures">
+                            <label class="block text-sm font-medium text-gray-700">Número de firmas</label>
+                            <input type="number" x-model="signatureCount" @input="logAndRecalculate" min="1" class="block w-full mt-2 mb-4 text-sm text-gray-700 border border-gray-300 rounded-md">
 
-                            <div 
+                            <div
                                 class="relative border-2 border-blue-400"
                                 x-ref="container"
+                                :style="{ top: `${delimY}px`, left: `${delimX}px`, width: `${delimWidth}px`, height: `${delimHeight}px` }"
                                 @mousedown="startDrag($event)"
                                 @mouseup="stopDrag()"
                                 @mousemove="handleMouseMove($event)"
@@ -196,17 +190,20 @@
 
                                 <template x-for="(row, rowIndex) in rows" :key="rowIndex">
                                     <!-- Fila -->
-                                    <div 
+                                    <div
                                         class="flex mb-4"
-                                        :class="row.length < maxSignaturesPerRow ? 'justify-center' : 'justify-between'"
+                                        :class="rowIndex === 0
+                                            ? 'justify-between'
+                                            : row.length < maxSignaturesPerRow
+                                                ? 'justify-center' : 'justify-between'"
                                     >
                                         <template x-for="signature in row" :key="signature">
                                             <!-- Firma -->
-                                            <div 
-                                                class="flex flex-col items-center justify-center text-center border rounded p-2 bg-gray-100"
+                                            <div
+                                                class="flex flex-col items-center justify-center p-2 text-center bg-gray-100 border rounded"
                                                 :style="{ width: `${signatureWidth}px`, height: '100px' }"
                                             >
-                                                <div class="border-b mb-2">Firma</div>
+                                                <div class="mb-2 border-b">Firma</div>
                                                 <div class="font-bold">Nombre</div>
                                                 <div>Rol</div>
                                             </div>
@@ -214,10 +211,14 @@
                                     </div>
                                 </template>
                                 <!-- Distribuir las firmas -->
-                                
+                                <div
+                                    class="absolute bottom-0 right-0 w-3 h-3 bg-gray-600 cursor-se-resize"
+                                    @mousedown="startResize($event)">
+                                </div>
+
                             </div>
                          </div>
-                        
+
                         <div x-data="resizeableText()">
                         <!-- Cuadro delimitador del texto personalizado -->
                             <div
@@ -450,9 +451,11 @@
         return {
             delimX: 50,
             delimY: 50,
-            delimWidth: 500,
+            delimWidth: 300,
             delimHeight: 300,
-            signatureWidth: 150,
+            initialWidth: 0,
+            initialHeight: 0,
+            signatureWidth: 250,
             signatureHeight: 100,
             isDragging: false,
             mouseX: 0,
@@ -472,19 +475,30 @@
             },
 
             startDrag(event) {
-                this.isDragging = true;
-                this.mouseX = event.clientX;
-                this.mouseY = event.clientY;
+                if (!this.isResizing) {
+                    this.isDragging = true;
+                    this.mouseX = event.clientX;
+                    this.mouseY = event.clientY;
+                }
             },
             stopDrag() {
                 this.isDragging = false;
+                if(this.isResizing) {
+                    this.isResizing = false;
+                    this.calculateSignatures();
+                }
             },
             handleMouseMove(event) {
-                if (this.isDragging) {
+                if (this.isDragging && !this.isResizing) {
                     this.delimX += event.clientX - this.mouseX;
                     this.delimY += event.clientY - this.mouseY;
                     this.mouseX = event.clientX;
                     this.mouseY = event.clientY;
+                } else if (this.isResizing) {
+                    let deltaX = event.clientX - this.mouseX;
+                    let deltaY = event.clientY - this.mouseY;
+                    this.delimWidth = Math.max(100, this.initialWidth + deltaX);
+                    this.delimHeight = Math.max(this.initialHeight + deltaY);
                 }
             },
             logAndRecalculate() {
@@ -502,6 +516,7 @@
                 }
 
                 const containerWidth = this.$refs.container.offsetWidth || 600; // Valor por defecto
+                console.log(containerWidth);
                 this.maxSignaturesPerRow = Math.floor(containerWidth / this.signatureWidth); // Cantidad de firmas por fila
                 this.updateRows();
             },
@@ -517,7 +532,14 @@
 
                 console.log("Filas actualizadas: ", this.rows);
             },
-            
+            startResize(event) {
+                this.isResizing = true;
+                this.mouseX = event.clientX;
+                this.mouseY = event.clientY;
+                this.initialWidth = this.delimWidth;
+                this.initialHeight = this.delimHeight;
+            },
+
         };
     }
 </script>
